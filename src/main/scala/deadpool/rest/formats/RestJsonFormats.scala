@@ -8,6 +8,6 @@ import spray.json._
   */
 object RestJsonFormats extends DefaultJsonProtocol {
 
-  implicit val threadsJsonFormat = jsonFormat7(DeadPoolThreads)
+  implicit val threadsJsonFormat = jsonFormat7(DeadPoolThreads.apply)
 
 }
