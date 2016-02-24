@@ -3,6 +3,7 @@ package deadpool.models
 import org.bson.Document
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.mongodb.async.client.{Subscription, Observer}
 import com.typesafe.scalalogging.Logger
@@ -19,7 +20,7 @@ import com.mongodb.client.model.Filters.eq
 /**
   * Created by thiago on 2/23/16.
   */
-case class DeadPoolThreads(id: Long, parentId: Long, hasChildren: Boolean, userId: Long, username: String, timestamp: Long, message: String) extends Document
+case class DeadPoolThreads(id: Long, parentId: Long, hasChildren: Boolean, userId: Long, username: String, timestamp: Long, message: String)
 
 object Threads {
   //new DeadPoolThreads(1, 1, false, 1, "dude", 1, "hey")
@@ -28,10 +29,19 @@ object Threads {
 
   private val collection = Mongo.collection("threads")
 
-  def getById(id: Long): Future[Seq[scala.Document]] = {
-    collection.find(and(com.mongodb.client.model.Filters.eq("thread.id", id))).first().toFuture()
-
-  }
+  def getById(id: Long): Future[Seq[DeadPoolThreads]] =
+    collection.find(and(com.mongodb.client.model.Filters.eq("thread.id", id))).first().toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+      val thread = x.get("thread").get
+      DeadPoolThreads(
+        thread.asDocument().get("id").asNumber().longValue(),
+        thread.asDocument().get("parentId").asNumber().longValue(),
+        thread.asDocument().get("hasChildren").asBoolean().getValue,
+        thread.asDocument().get("userId").asNumber().longValue(),
+        thread.asDocument().get("username").asString().getValue,
+        thread.asDocument().get("timestamp").asNumber().longValue(),
+        thread.asDocument().get("message").asString().getValue
+      )
+    }}
 
   def save(thread: DeadPoolThreads): Boolean = {
     val doc = scala.Document(

@@ -1,22 +1,19 @@
 package deadpool.rest
 
-import org.bson.Document
-import spray.http.MediaTypes
-import spray.http.MediaTypes._
-import akka.actor.Actor
-import akka.util.Timeout
-import spray.httpx.unmarshalling.Unmarshaller
 import scala.concurrent.duration._
-import spray.http.HttpHeaders.RawHeader
-import spray.routing.HttpService
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.{Failure, Success}
+
+
+import spray.http.MediaTypes._
+import spray.http.StatusCodes._
+import spray.http.HttpHeaders._
 import spray.json._
 import spray.httpx.SprayJsonSupport._
+import spray.routing.HttpService
 
 import deadpool.rest.formats.RestJsonFormats._
 import deadpool.models.{DeadPoolThreads, Threads}
-import scala.concurrent.ExecutionContext.Implicits.global
-
-import scala.util.{Failure, Success}
 
 /**
   * Created by thiago on 2/23/16.
@@ -31,9 +28,9 @@ trait ThreadsService extends HttpService {
         get {
           val bla = Threads.getById(id.toLong)
           onComplete(bla) {
-            case Success(some: List[org.mongodb.scala.Document]) =>
-              if(some.nonEmpty && some.head.get("thread").isDefined)
-                complete(some.head.get("thread").get.toString)
+            case Success(some: List[DeadPoolThreads]) =>
+              if(!some.isEmpty)
+                complete(some.head)
               else
                 complete(error)
             case Failure(error) =>
