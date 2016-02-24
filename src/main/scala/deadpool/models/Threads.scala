@@ -1,28 +1,32 @@
 package deadpool.models
 
-import org.bson.Document
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-import com.mongodb.async.client.{Subscription, Observer}
 import com.typesafe.scalalogging.Logger
+
+import com.mongodb.async.client.{Subscription, Observer}
 import org.mongodb.scala
+import org.mongodb.scala.bson.{BsonNumber, BsonBoolean}
 import org.mongodb.scala.{Completed, Observable, MongoCollection, ScalaObservable}
 import org.mongodb.scala.bson.conversions.Bson
-import org.slf4j.LoggerFactory
-import deadpool.sources.Mongo
 import com.mongodb.client.model.Filters._
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 
+import org.slf4j.LoggerFactory
+
+import deadpool.sources.Mongo
 
 /**
   * Chat threads
   */
-case class DeadPoolThreads(id: Long, parentId: Long, hasChildren: Boolean, userId: Long, username: String, timestamp: Long, message: String)
+case class DeadPoolThreads(id: Option[Long], parentId: Long, hasChildren: Option[Boolean], userId: Long, username: String, timestamp: Option[Long], message: String)
+
 
 object Threads {
+
   //new DeadPoolThreads(1, 1, false, 1, "dude", 1, "hey")
 
   val log = Logger(LoggerFactory.getLogger(this.getClass))
@@ -33,12 +37,12 @@ object Threads {
     collection.find(and(com.mongodb.client.model.Filters.eq("thread.id", id))).first().toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
-        thread.asDocument().get("id").asNumber().longValue(),
-        thread.asDocument().get("parentId").asNumber().longValue(),
-        thread.asDocument().get("hasChildren").asBoolean().getValue,
-        thread.asDocument().get("userId").asNumber().longValue(),
-        thread.asDocument().get("username").asString().getValue,
-        thread.asDocument().get("timestamp").asNumber().longValue(),
+        Some(thread.asDocument().get("id").asNumber().longValue()),
+        thread.asDocument().get("parent_id").asNumber().longValue(),
+        Some(thread.asDocument().get("has_children").asBoolean().getValue),
+        thread.asDocument().get("user_id").asNumber().longValue(),
+        thread.asDocument().get("user_name").asString().getValue,
+        Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue
       )
     }}
@@ -47,31 +51,40 @@ object Threads {
     collection.find(and(com.mongodb.client.model.Filters.eq("thread.parentId", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
-        thread.asDocument().get("id").asNumber().longValue(),
-        thread.asDocument().get("parentId").asNumber().longValue(),
-        thread.asDocument().get("hasChildren").asBoolean().getValue,
-        thread.asDocument().get("userId").asNumber().longValue(),
-        thread.asDocument().get("username").asString().getValue,
-        thread.asDocument().get("timestamp").asNumber().longValue(),
+        Some(thread.asDocument().get("id").asNumber().longValue()),
+        thread.asDocument().get("parent_id").asNumber().longValue(),
+        Some(thread.asDocument().get("has_children").asBoolean().getValue),
+        thread.asDocument().get("user_id").asNumber().longValue(),
+        thread.asDocument().get("user_name").asString().getValue,
+        Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue
       )
     }}
 
-  def save(thread: DeadPoolThreads): Long = {
+  def save(thread: DeadPoolThreads): DeadPoolThreads = {
     val id = System.nanoTime()
+    val savingTime = System.currentTimeMillis()
     val doc = scala.Document(
       "thread" -> scala.Document(
         "id"-> id,
-        "parentId"->thread.parentId,
-        "hasChildren"->thread.hasChildren,
-        "userId" -> thread.userId,
-        "username" -> thread.username,
-        "timestamp" -> System.currentTimeMillis(),
+        "parent_id"->thread.parentId,
+        "has_children"->thread.hasChildren.getOrElse(false),
+        "user_id" -> thread.userId,
+        "user_name" -> thread.username,
+        "timestamp" -> savingTime,
         "message" -> thread.message
           )
       )
     collection.insertOne(doc).toFuture().isCompleted
-    id
+    DeadPoolThreads(
+      Some(doc.get("thread").get.asDocument().get("id", BsonNumber(id)).asNumber().longValue()),
+      doc.get("thread").get.asDocument().get("parent_id").asNumber().longValue(),
+      Some(doc.get("thread").get.asDocument().get("has_children").asBoolean().getValue),
+      doc.get("thread").get.asDocument().get("user_id").asNumber().longValue(),
+      doc.get("thread").get.asDocument().get("user_name").asString().getValue,
+      Some(doc.get("thread").get.asDocument().get("timestamp", BsonNumber(savingTime)).asNumber().longValue()),
+      doc.get("thread").get.asDocument().get("message").asString().getValue
+    )
   }
 }
 

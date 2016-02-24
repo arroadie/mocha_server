@@ -2,7 +2,7 @@ package deadpool.actors
 
 import akka.actor.Actor
 import akka.util.Timeout
-import deadpool.rest.{ThreadsService, UsersService}
+import deadpool.rest.{UsersService, ThreadsService}
 import scala.concurrent.duration._
 import spray.http.HttpHeaders.RawHeader
 import spray.http.MediaTypes._

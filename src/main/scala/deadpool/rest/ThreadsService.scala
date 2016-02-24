@@ -21,6 +21,7 @@ import deadpool.models.{DeadPoolThreads, Threads}
 trait ThreadsService extends HttpService {
 
   val error = "{\"status\": \"error\"}"
+  val save = (put | post)
 
   val threadsRoutes = {
     respondWithMediaType(`application/json`){
@@ -38,9 +39,9 @@ trait ThreadsService extends HttpService {
               complete(error)
           }
         } ~
-        put {
+        save {
           entity(as[DeadPoolThreads]) { thread =>
-            complete("{\"status\":\"OK\", \"id\": " + Threads.save(thread) + "}")
+            complete(Threads.save(thread.copy(parentId = id.toLong)))
           }
         }
     } ~
