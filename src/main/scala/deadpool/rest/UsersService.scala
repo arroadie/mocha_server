@@ -19,12 +19,6 @@ trait UsersService extends HttpService {
         get {
           complete("USERS GET")
         } ~
-        put {
-          complete("USERS PUT")
-        } ~
-        delete {
-          complete("USERS DEL")
-        } ~
         post {
           complete("METHOD NOT IMPLEMENTED")
         }
@@ -32,7 +26,14 @@ trait UsersService extends HttpService {
       path("users" / Segment) { id =>
         get {
           complete(s"looking for user: $id")
+        } ~
+        put {
+          complete("USERS PUT")
+        } ~
+        delete {
+          complete("USERS DEL")
         }
+
       }
     }
   }

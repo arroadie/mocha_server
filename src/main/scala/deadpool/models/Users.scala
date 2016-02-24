@@ -1,15 +1,13 @@
 package deadpool.models
 
-import org.mongodb.scala
-
-import _root_.scala.concurrent.Future
-
 import com.mongodb.client.model.Filters._
 import com.typesafe.scalalogging.Logger
+import deadpool.sources.Mongo
 import org.bson.Document
 import org.mongodb.scala
 import org.slf4j.LoggerFactory
-import sources.Mongo
+
+import _root_.scala.concurrent.Future
 
 
 
