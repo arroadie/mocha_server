@@ -33,3 +33,11 @@ object Threads {
   }
 
 }
+
+object ActionThreadsEnum extends Enumeration {
+  val FAVORITE = Value("favorite")
+  val PINNED = Value("pinned")
+  val REPLY = Value("reply")
+  val CREATED = Value("created")
+  val IGNORED = Value("ignored")
+}
