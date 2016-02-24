@@ -14,7 +14,7 @@ import spray.routing.HttpServiceActor
 
 class RestActor extends HttpServiceActor
 with ThreadsService
-with UsersController {
+with UsersService {
 
   def receive =  runRoute(
     route ~
