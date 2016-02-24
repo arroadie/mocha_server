@@ -66,7 +66,7 @@ object Threads {
         "hasChildren"->thread.hasChildren,
         "userId" -> thread.userId,
         "username" -> thread.username,
-        "timestamp" -> thread.timestamp,
+        "timestamp" -> System.currentTimeMillis(),
         "message" -> thread.message
           )
       )
