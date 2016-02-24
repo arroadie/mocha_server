@@ -1,9 +1,12 @@
 package deadpool.rest
 
 import akka.util.Timeout
+import deadpool.models.{DeadPoolUsers, Users}
 import scala.concurrent.duration._
 import spray.http.MediaTypes._
 import spray.routing.HttpService
+
+import scala.util.{Failure, Success}
 
 /**
   * Created by thiago on 2/23/16.
@@ -12,7 +15,7 @@ trait UsersService extends HttpService {
 
   implicit val timeout = Timeout(5 seconds)
   implicit def executionContext = actorRefFactory.dispatcher
-
+  val error = "{\"status\": \"error\"}"
   val usersRoutes = {
     respondWithMediaType(`application/json`) {
       path("users") {
@@ -25,11 +28,24 @@ trait UsersService extends HttpService {
       } ~
       path("users" / Segment) { id =>
         get {
-          complete(s"looking for user: $id")
+          val userQuery = Users.getById(id.toLong)
+          onComplete(userQuery) {
+            case Success(some: List[org.mongodb.scala.Document]) =>
+              if(some.nonEmpty && some.head.get("user").isDefined)
+                complete(some.head.get("user").get.toString)
+              else
+                complete(error)
+            case Failure(error) =>
+              println(error.getMessage)
+              complete(error)
+          }
+
         } ~
         put {
-          complete("USERS PUT")
-        } ~
+          entity(as[DeadPoolUsers]) { user =>
+            Users.save(user)
+            complete("{\"status\":\"OK\"}")
+          }        } ~
         delete {
           complete("USERS DEL")
         }
