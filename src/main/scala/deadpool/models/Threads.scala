@@ -48,7 +48,7 @@ object Threads {
     }}
 
   def getByParentId(id: Long): Future[Seq[DeadPoolThreads]] =
-    collection.find(and(com.mongodb.client.model.Filters.eq("thread.parentId", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+    collection.find(and(com.mongodb.client.model.Filters.eq("thread.parent_id", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
         Some(thread.asDocument().get("id").asNumber().longValue()),
