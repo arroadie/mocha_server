@@ -1,15 +1,18 @@
 package deadpool
 
-import actors.RestActor
-import akka.actor.ActorSystem
 import scala.concurrent.duration._
-import akka.io.IO
-import akka.pattern._
-import akka.actor._
-import akka.util.Timeout
 
+import akka.actor.{ActorSystem, Props}
+import akka.io.IO
+import akka.util.Timeout
+import deadpool.actors.RestActor
 import spray.can.Http
 
+import scala.io.BufferedSource
+
+/**
+  * Created by thiago on 2/24/16.
+  */
 object DeadPoolServer extends App {
 
   implicit val timeout = Timeout(5 seconds)
@@ -18,7 +21,11 @@ object DeadPoolServer extends App {
 
   val rest = system.actorOf(Props(classOf[RestActor]))
 
-  println("CHIMICHANGA");
+  val stream : BufferedSource = scala.io.Source.fromInputStream(getClass.getResourceAsStream("/cool.txt"))
+
+  stream.getLines() foreach { line =>
+    println(line)
+  }
 
   IO(Http) ! Http.Bind(rest, "0.0.0.0", 8080)
 
