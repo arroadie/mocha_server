@@ -32,7 +32,7 @@ trait ThreadsService extends HttpService {
           val bla = Threads.getById(id.toLong)
           onComplete(bla) {
             case Success(some: List[org.mongodb.scala.Document]) =>
-              if(some.head.get("thread").isDefined)
+              if(some.nonEmpty && some.head.get("thread").isDefined)
                 complete(some.head.get("thread").get.toString)
               else
                 complete(error)
