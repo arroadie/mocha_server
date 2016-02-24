@@ -21,7 +21,7 @@ import com.mongodb.client.model.Filters.eq
  * Created by userti on 24-02-16.
  */
 
-case class DeadPoolUsers(id: Long, username: String, myThreads: Map[Long, ActionThreadsEnum.Value]) extends Document
+case class DeadPoolUsers(id: Long, username: String, myThreads: Map[Long, ActionThreadsEnum.Value])
 
 object Users {
 
@@ -40,7 +40,7 @@ object Users {
       "user" -> scala.Document(
         "id" ->user.id,
         "username" -> user.username,
-        "myThreads" -> user.myThreads
+        "myThreads" -> None
       )
     )
     collection.insertOne(doc).toFuture().isCompleted

@@ -1,12 +1,21 @@
 package deadpool.rest
 
-import akka.util.Timeout
-import deadpool.models.{DeadPoolUsers, Users}
+import scala.util.{Failure, Success}
 import scala.concurrent.duration._
+
+
+import akka.util.Timeout
+
 import spray.http.MediaTypes._
+import spray.http.StatusCodes._
+import spray.http.HttpHeaders._
+import spray.json._
+import spray.httpx.SprayJsonSupport._
 import spray.routing.HttpService
 
-import scala.util.{Failure, Success}
+import deadpool.rest.formats.RestJsonFormats._
+import deadpool.models.{DeadPoolUsers, Users}
+
 
 /**
   * Created by thiago on 2/23/16.

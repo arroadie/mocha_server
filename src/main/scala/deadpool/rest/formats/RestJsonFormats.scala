@@ -1,6 +1,6 @@
 package deadpool.rest.formats
 
-import deadpool.models.DeadPoolThreads
+import deadpool.models.{ActionThreadsEnum, DeadPoolUsers, DeadPoolThreads}
 import spray.json._
 
 /**
@@ -8,6 +8,17 @@ import spray.json._
   */
 object RestJsonFormats extends DefaultJsonProtocol {
 
+
+  implicit object actionThreadsJsonFormat extends RootJsonFormat[ActionThreadsEnum.Value] {
+    def write(obj: ActionThreadsEnum.Value): JsValue = JsString(obj.toString)
+
+    def read(json: JsValue): ActionThreadsEnum.Value = json match {
+      case JsString(str) => ActionThreadsEnum.withName(str)
+      case _ => throw new DeserializationException("Enum string expected")
+    }
+  }
+
   implicit val threadsJsonFormat = jsonFormat7(DeadPoolThreads.apply)
+  implicit val usersJsonFormat   = jsonFormat3(DeadPoolUsers.apply)
 
 }
