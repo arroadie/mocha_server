@@ -1,4 +1,4 @@
-package sources
+package deadpool.sources
 
 import com.mongodb.async.client.MongoClientSettings
 import org.mongodb.scala.MongoClient

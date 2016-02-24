@@ -1,9 +1,11 @@
 package deadpool.rest
 
 import org.bson.Document
+import spray.http.MediaTypes
 import spray.http.MediaTypes._
 import akka.actor.Actor
 import akka.util.Timeout
+import spray.httpx.unmarshalling.Unmarshaller
 import scala.concurrent.duration._
 import spray.http.HttpHeaders.RawHeader
 import spray.routing.HttpService
@@ -21,20 +23,29 @@ import scala.util.{Failure, Success}
   */
 trait ThreadsService extends HttpService {
 
+  val error = "{\"status\": \"error\"}"
+
   val threadsRoutes = {
     respondWithMediaType(`application/json`){
       path("threads" / Segment) { id =>
         get {
-          val bla = Threads.getById(id)
+          val bla = Threads.getById(id.toLong)
           onComplete(bla) {
-            case Success(some: List[Document]) => complete(some.head.toJson)
+            case Success(some: List[org.mongodb.scala.Document]) =>
+              if(some.head.get("thread").isDefined)
+                complete(some.head.get("thread").get.toString)
+              else
+                complete(error)
             case Failure(error) =>
               println(error.getMessage)
-              complete("{\"status\": \"error\"}")
+              complete(error)
           }
         } ~
         put {
-          complete("{\"status\":\"OK\"}")
+          entity(as[DeadPoolThreads]) { thread =>
+            Threads.save(thread)
+            complete("{\"status\":\"OK\"}")
+          }
         }
     } ~
         path("threads") {
