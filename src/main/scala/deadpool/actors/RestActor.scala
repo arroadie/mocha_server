@@ -7,6 +7,7 @@ import scala.concurrent.duration._
 import spray.http.HttpHeaders.RawHeader
 import spray.http.MediaTypes._
 import spray.routing.HttpServiceActor
+import twirl.api.Html
 
 /**
   * Created by thiago on 2/23/16.
@@ -25,8 +26,10 @@ with UsersService {
   val route = {
     path("") {
       get {
-        respondWithMediaType(`application/json`){
-          complete("DEADPOOL")
+        respondWithMediaType(`text/html`){
+          complete{
+            deadpool.html.about.render.toString
+          }
         }
       }
     }

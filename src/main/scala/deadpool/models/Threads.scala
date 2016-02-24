@@ -18,7 +18,7 @@ import com.mongodb.client.model.Filters.eq
 
 
 /**
-  * Created by thiago on 2/23/16.
+  * Chat threads
   */
 case class DeadPoolThreads(id: Long, parentId: Long, hasChildren: Boolean, userId: Long, username: String, timestamp: Long, message: String)
 
@@ -43,21 +43,36 @@ object Threads {
       )
     }}
 
-  def save(thread: DeadPoolThreads): Boolean = {
+  def getByParentId(id: Long): Future[Seq[DeadPoolThreads]] =
+    collection.find(and(com.mongodb.client.model.Filters.eq("thread.parentId", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+      val thread = x.get("thread").get
+      DeadPoolThreads(
+        thread.asDocument().get("id").asNumber().longValue(),
+        thread.asDocument().get("parentId").asNumber().longValue(),
+        thread.asDocument().get("hasChildren").asBoolean().getValue,
+        thread.asDocument().get("userId").asNumber().longValue(),
+        thread.asDocument().get("username").asString().getValue,
+        thread.asDocument().get("timestamp").asNumber().longValue(),
+        thread.asDocument().get("message").asString().getValue
+      )
+    }}
+
+  def save(thread: DeadPoolThreads): Long = {
+    val id = System.nanoTime()
     val doc = scala.Document(
       "thread" -> scala.Document(
-        "id"->thread.id,
+        "id"-> id,
         "parentId"->thread.parentId,
         "hasChildren"->thread.hasChildren,
         "userId" -> thread.userId,
         "username" -> thread.username,
-        "timestamp" -> thread.timestamp,
+        "timestamp" -> System.currentTimeMillis(),
         "message" -> thread.message
           )
       )
     collection.insertOne(doc).toFuture().isCompleted
+    id
   }
-
 }
 
 object ActionThreadsEnum extends Enumeration {

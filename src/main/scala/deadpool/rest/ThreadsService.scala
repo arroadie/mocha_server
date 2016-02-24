@@ -40,11 +40,25 @@ trait ThreadsService extends HttpService {
         } ~
         put {
           entity(as[DeadPoolThreads]) { thread =>
-            Threads.save(thread)
-            complete("{\"status\":\"OK\"}")
+            complete("{\"status\":\"OK\", \"id\": " + Threads.save(thread) + "}")
           }
         }
     } ~
+        path("threads" / Segment / "children") { id =>
+          get {
+            val bla = Threads.getByParentId(id.toLong)
+            onComplete(bla) {
+              case Success(some: List[DeadPoolThreads]) =>
+                if(!some.isEmpty)
+                  complete(some)
+                else
+                  complete(error)
+              case Failure(error) =>
+                println(error.getMessage)
+                complete(error)
+            }
+          }
+      } ~
         path("threads") {
         get {
           complete("{\"repsonse\": \"THREADS GET\"}")
