@@ -39,9 +39,9 @@ trait UsersService extends HttpService {
         get {
           val userQuery = Users.getById(id.toLong)
           onComplete(userQuery) {
-            case Success(some: List[org.mongodb.scala.Document]) =>
-              if(some.nonEmpty && some.head.get("user").isDefined)
-                complete(some.head.get("user").get.toString)
+            case Success(some: List[DeadPoolUsers]) =>
+              if(!some.isEmpty)
+                complete(some.head)
               else
                 complete(errorUser)
             case Failure(error) =>

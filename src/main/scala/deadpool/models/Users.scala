@@ -3,6 +3,7 @@ package deadpool.models
 import org.bson.Document
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.mongodb.async.client.{Subscription, Observer}
 import com.typesafe.scalalogging.Logger
@@ -31,9 +32,26 @@ object Users {
 
   private val collection = Mongo.collection("users")
 
-  def getById(id: Long): Future[Seq[scala.Document]] = {
-    collection.find(and(com.mongodb.client.model.Filters.eq("user.id", id))).first().toFuture()
-  }
+
+  def getById(id: Long): Future[Seq[DeadPoolUsers]] =
+    collection.find(and(com.mongodb.client.model.Filters.eq("user.id", id))).first().toFuture.map[Seq[DeadPoolUsers]]{ x => x.map { y =>
+      val user = y.get("user").get
+      DeadPoolUsers(
+        user.asDocument().get("id").asNumber().longValue(),
+        user.asDocument().get("username").asString().toString,
+        Map.empty[Long, ActionThreadsEnum.Value]
+      )
+    }}
+
+  def getByUsername(username: String): Future[Seq[DeadPoolUsers]] =
+    collection.find(and(com.mongodb.client.model.Filters.eq("user.username", username))).first().toFuture.map[Seq[DeadPoolUsers]]{ x => x.map { y =>
+      val user = y.get("user").get
+      DeadPoolUsers(
+        user.asDocument().get("id").asNumber().longValue(),
+        user.asDocument().get("username").asString().toString,
+        Map.empty[Long, ActionThreadsEnum.Value]
+      )
+    }}
 
   def save(user: DeadPoolUsers): Boolean = {
     val doc = scala.Document(
