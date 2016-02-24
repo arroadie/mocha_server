@@ -14,7 +14,7 @@ import rest._
 
 class RestActor extends HttpServiceActor
 with ThreadsService
-with UsersService {
+with UsersController {
 
   def receive =  runRoute(
     route ~
