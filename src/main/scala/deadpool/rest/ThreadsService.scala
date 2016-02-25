@@ -41,7 +41,7 @@ trait ThreadsService extends HttpService {
         } ~
         save {
           entity(as[DeadPoolThreads]) { thread =>
-            complete(Threads.save(thread.copy(parentId = id.toLong)))
+            complete(Threads.save(thread.copy(parent_id = id.toLong)))
           }
         }
     } ~

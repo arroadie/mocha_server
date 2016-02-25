@@ -22,7 +22,7 @@ import deadpool.sources.Mongo
 /**
   * Chat threads
   */
-case class DeadPoolThreads(id: Option[Long], parentId: Long, hasChildren: Option[Boolean], userId: Long, username: String, timestamp: Option[Long], message: String)
+case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String)
 
 
 object Threads {
@@ -67,10 +67,10 @@ object Threads {
     val doc = scala.Document(
       "thread" -> scala.Document(
         "id"-> id,
-        "parent_id"->thread.parentId,
-        "has_children"->thread.hasChildren.getOrElse(false),
-        "user_id" -> thread.userId,
-        "user_name" -> thread.username,
+        "parent_id"->thread.parent_id,
+        "has_children"->thread.has_children.getOrElse(false),
+        "user_id" -> thread.user_id,
+        "user_name" -> thread.user_name,
         "timestamp" -> savingTime,
         "message" -> thread.message
           )
