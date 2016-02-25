@@ -1,6 +1,6 @@
 package deadpool.rest.formats
 
-import deadpool.models.{ActionThreadsEnum, DeadPoolUsers, DeadPoolThreads}
+import deadpool.models.{ThreadsResponse, ActionThreadsEnum, DeadPoolUsers, DeadPoolThreads}
 import spray.json._
 
 /**
@@ -20,5 +20,6 @@ object RestJsonFormats extends DefaultJsonProtocol {
 
   implicit val threadsJsonFormat = jsonFormat7(DeadPoolThreads.apply)
   implicit val usersJsonFormat   = jsonFormat3(DeadPoolUsers.apply)
+  implicit val threadsResponseFormat = jsonFormat2(ThreadsResponse)
 
 }

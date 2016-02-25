@@ -12,6 +12,7 @@ import org.mongodb.scala.bson.{BsonNumber, BsonBoolean}
 import org.mongodb.scala.{Completed, Observable, MongoCollection, ScalaObservable}
 import org.mongodb.scala.bson.conversions.Bson
 import com.mongodb.client.model.Filters._
+import com.mongodb.client.model.Updates._
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 
@@ -24,6 +25,7 @@ import deadpool.sources.Mongo
   */
 case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String)
 
+case class ThreadsResponse(id: Long, children: List[DeadPoolThreads])
 
 object Threads {
 
@@ -76,6 +78,9 @@ object Threads {
           )
       )
     collection.insertOne(doc).toFuture().isCompleted
+    Future{
+      swapParentState(thread.parent_id)
+    }
     DeadPoolThreads(
       Some(doc.get("thread").get.asDocument().get("id", BsonNumber(id)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("parent_id").asNumber().longValue(),
@@ -85,6 +90,10 @@ object Threads {
       Some(doc.get("thread").get.asDocument().get("timestamp", BsonNumber(savingTime)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("message").asString().getValue
     )
+  }
+
+  def swapParentState(id: Long): Unit = {
+    collection.updateOne(com.mongodb.client.model.Filters.eq("thread.id", id), set("thread.has_children", true)).toFuture().isCompleted
   }
 }
 

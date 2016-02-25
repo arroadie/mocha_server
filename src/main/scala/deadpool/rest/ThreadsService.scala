@@ -13,7 +13,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.routing.HttpService
 
 import deadpool.rest.formats.RestJsonFormats._
-import deadpool.models.{DeadPoolThreads, Threads}
+import deadpool.models.{ThreadsResponse, DeadPoolThreads, Threads}
 
 /**
   * Created by thiago on 2/23/16.
@@ -33,10 +33,10 @@ trait ThreadsService extends HttpService {
               if(!some.isEmpty)
                 complete(some.head)
               else
-                complete(error)
+                complete(404, error)
             case Failure(error) =>
               println(error.getMessage)
-              complete(error)
+              complete(500, error)
           }
         } ~
         save {
@@ -50,10 +50,7 @@ trait ThreadsService extends HttpService {
             val bla = Threads.getByParentId(id.toLong)
             onComplete(bla) {
               case Success(some: List[DeadPoolThreads]) =>
-                if(!some.isEmpty)
-                  complete(some)
-                else
-                  complete(error)
+                complete(ThreadsResponse(id.toLong, some))
               case Failure(error) =>
                 println(error.getMessage)
                 complete(error)
