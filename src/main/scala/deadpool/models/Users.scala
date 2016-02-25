@@ -58,7 +58,9 @@ object Users {
       "user" -> scala.Document(
         "id" ->user.id,
         "username" -> user.username,
-        "myThreads" -> None
+        "myThreads" -> scala.Document (
+          user.myThreads.map{ x => x._1.toString -> x._2.toString}
+        )
       )
     )
     collection.insertOne(doc).toFuture().isCompleted
