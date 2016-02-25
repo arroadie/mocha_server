@@ -67,7 +67,7 @@ trait UsersService extends HttpService {
           onComplete(userQuery) {
             case Success(some: List[DeadPoolUsers]) =>
               if(!some.isEmpty)
-                complete(some.head.myThreads.get(ActionThreadsEnum.REPLY).get)
+                complete(some.head.myThreads.get.get(ActionThreadsEnum.REPLY).get)
               else
                 complete(errorUser)
             case Failure(error) =>

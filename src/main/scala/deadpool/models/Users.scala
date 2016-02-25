@@ -27,7 +27,7 @@ import com.mongodb.client.model.Filters.eq
  * Created by userti on 24-02-16.
  */
 
-case class DeadPoolUsers(id: Long, username: String, myThreads: Map[ActionThreadsEnum.Value, List[Long]])
+case class DeadPoolUsers(id: Option[Long], username: String, myThreads: Option[Map[ActionThreadsEnum.Value, List[Long]]])
 
 object Users {
 
@@ -55,9 +55,9 @@ object Users {
       }
 
       DeadPoolUsers(
-        user.asDocument().get("id").asNumber().longValue(),
+        Some(user.asDocument().get("id").asNumber().longValue()),
         user.asDocument().get("username").asString().toString,
-        tmp_myThreads.toMap
+       Some(tmp_myThreads.toMap)
       )
     }}
 
@@ -80,9 +80,9 @@ object Users {
       }
 
       DeadPoolUsers(
-        user.asDocument().get("id").asNumber().longValue(),
+        Some(user.asDocument().get("id").asNumber().longValue()),
         user.asDocument().get("username").asString().toString,
-        myThreads.toMap
+        Some(myThreads.toMap)
       )
     }}
 
