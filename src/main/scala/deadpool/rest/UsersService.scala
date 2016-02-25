@@ -79,12 +79,16 @@ trait UsersService extends HttpService {
       } ~
       path("users" / Segment / "threads" / LongNumber / "subscribe") { (username, threadId) =>
         delete {
+          dynamic {
             Users.unsubscribe(username, List(threadId), ActionThreadsEnum.REPLY)
             complete("{\"status\":\"deleted\", \"id\":" + threadId + "}")
-          } ~
+          }
+        } ~
         put {
-          Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.REPLY)
-          complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
+          dynamic {
+            Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.REPLY)
+            complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
+          }
         }
       }
     }
