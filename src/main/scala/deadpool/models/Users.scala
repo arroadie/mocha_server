@@ -104,12 +104,26 @@ object Users {
     user
   }
 
-  def update(username: String, threads: List[Long], action: ActionThreadsEnum.Value): DeadPoolUsers = {
+  def subscribe(username: String, threads: List[Long], action: ActionThreadsEnum.Value): DeadPoolUsers = {
     val userPreviousSaved = Await.result(getByUsername(username), 10 seconds)
 
     if (userPreviousSaved.nonEmpty)
       threads foreach {el =>
-        collection.updateOne(com.mongodb.client.model.Filters.eq("user.username", username), com.mongodb.client.model.Updates.addToSet(s"user.myThreads.${action.toString}", el)).toFuture().isCompleted
+        collection.updateOne(com.mongodb.client.model.Filters.eq("user.username", username), com.mongodb.client.model.Updates.addToSet(s"user.myThreads.${action.toString}", el)).toFuture().onComplete{
+          case Success(any) => println("Success: " + any)
+          case Failure(any) => println("Failure: " + any)
+        }
+      }
+
+    Await.result(getByUsername(username), 10 seconds).head
+  }
+
+  def unsubscribe(username: String, threads: List[Long], action: ActionThreadsEnum.Value): DeadPoolUsers = {
+    val userPreviousSaved = Await.result(getByUsername(username), 10 seconds)
+
+    if (userPreviousSaved.nonEmpty)
+      threads foreach {el =>
+        collection.updateOne(com.mongodb.client.model.Filters.eq("user.username", username), com.mongodb.client.model.Updates.pull(s"user.myThreads.${action.toString}", el)).toFuture().isCompleted
       }
 
     Await.result(getByUsername(username), 10 seconds).head

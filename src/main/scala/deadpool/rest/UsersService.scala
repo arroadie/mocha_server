@@ -56,11 +56,11 @@ trait UsersService extends HttpService {
           entity(as[DeadPoolUsers]) { user =>
             Users.findOrCreate(user)
             complete("{\"status\":\"OK\"}")
-          }        } ~
-        delete {
-          complete("USERS DEL")
-        }
-
+          }
+        } ~
+          delete {
+            complete("USERS DEL")
+          }
       } ~
       path("users" / Segment / "state") { username =>
         get {
@@ -78,8 +78,12 @@ trait UsersService extends HttpService {
         }
       } ~
       path("users" / Segment / "threads" / LongNumber / "subscribe") { (username, threadId) =>
+        delete {
+            Users.unsubscribe(username, List(threadId), ActionThreadsEnum.REPLY)
+            complete("{\"status\":\"deleted\", \"id\":" + threadId + "}")
+          } ~
         put {
-          Users.update(username, List(threadId), ActionThreadsEnum.REPLY)
+          Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.REPLY)
           complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
         }
       }

@@ -84,7 +84,7 @@ object Threads {
     }
 
     Future {
-      Users.update(thread.user_name, List(id), ActionThreadsEnum.REPLY)
+      Users.subscribe(thread.user_name, List(id), ActionThreadsEnum.REPLY)
     }
 
     DeadPoolThreads(
