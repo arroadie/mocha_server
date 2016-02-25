@@ -1,6 +1,7 @@
 package deadpool.models
 
 import org.bson.Document
+import org.mongodb.scala.bson.{BsonNumber, BsonArray}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -22,7 +23,7 @@ import com.mongodb.client.model.Filters.eq
  * Created by userti on 24-02-16.
  */
 
-case class DeadPoolUsers(id: Long, username: String, myThreads: Map[Long, ActionThreadsEnum.Value])
+case class DeadPoolUsers(id: Long, username: String, myThreads: Map[ActionThreadsEnum.Value, List[Long]])
 
 object Users {
 
@@ -39,7 +40,7 @@ object Users {
       DeadPoolUsers(
         user.asDocument().get("id").asNumber().longValue(),
         user.asDocument().get("username").asString().toString,
-        Map.empty[Long, ActionThreadsEnum.Value]
+        Map.empty[ActionThreadsEnum.Value, List[Long] ]
       )
     }}
 
@@ -49,7 +50,7 @@ object Users {
       DeadPoolUsers(
         user.asDocument().get("id").asNumber().longValue(),
         user.asDocument().get("username").asString().toString,
-        Map.empty[Long, ActionThreadsEnum.Value]
+        Map.empty[ActionThreadsEnum.Value, List[Long] ]
       )
     }}
 
@@ -58,9 +59,7 @@ object Users {
       "user" -> scala.Document(
         "id" ->user.id,
         "username" -> user.username,
-        "myThreads" -> scala.Document (
-          user.myThreads.map{ x => x._1.toString -> x._2.toString}
-        )
+        "myThreads" -> scala.Document(user.myThreads.map { x => x._1.toString -> BsonArray(x._2.map { y => BsonNumber(y)})  })
       )
     )
     collection.insertOne(doc).toFuture().isCompleted
