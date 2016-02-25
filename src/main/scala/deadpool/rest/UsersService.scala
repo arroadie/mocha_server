@@ -38,7 +38,7 @@ trait UsersService extends HttpService {
       } ~
       path("users" / Segment) { id =>
         get {
-          val userQuery = Users.getById(id.toLong)
+          val userQuery = Users.getByUsername(id)
           onComplete(userQuery) {
             case Success(some: List[DeadPoolUsers]) =>
               if(!some.isEmpty)
@@ -74,7 +74,12 @@ trait UsersService extends HttpService {
               println(error.getMessage)
               complete(error)
           }
-
+        }
+      } ~
+      path("users" / Segment / "threads" / LongNumber / "subscribe") { (username, threadId) =>
+        put {
+          Users.update(username, List(threadId), ActionThreadsEnum.REPLY)
+          complete(Users.update(username, List(threadId), ActionThreadsEnum.REPLY))
         }
       }
     }
