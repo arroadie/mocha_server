@@ -25,7 +25,7 @@ trait UsersService extends HttpService {
   implicit val timeout = Timeout(5 seconds)
   implicit def executionContext = actorRefFactory.dispatcher
   val errorUser = "{\"status\": \"error\"}"
-  val saveUser = (put | post)
+  val saveUser = ( put | post )
   val usersRoutes = {
     respondWithMediaType(`application/json`) {
       path("users") {
@@ -60,8 +60,7 @@ trait UsersService extends HttpService {
           complete("USERS DEL")
         }
 
-      }
-
+      } ~
       path("users" / Segment / "state") { username =>
         get {
           val userQuery = Users.getByUsername(username)

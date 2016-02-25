@@ -1,7 +1,7 @@
 package deadpool.models
 
 import org.bson.Document
-import org.mongodb.scala.bson.{BsonNumber, BsonArray}
+import org.mongodb.scala.bson.{BsonDocument, BsonNumber, BsonArray}
 
 import _root_.scala.collection.mutable
 import _root_.scala.collection.mutable.ListBuffer
@@ -95,7 +95,7 @@ object Users {
         "user" -> scala.Document(
           "id" -> id,
           "username" -> user.username,
-          "myThreads" -> scala.Document(user.myThreads.map { x => x._1.toString -> BsonArray(x._2.map { y => BsonNumber(y)})  })
+          "myThreads" -> scala.Document(ActionThreadsEnum.values.map{x => x.toString -> BsonArray()})
         )
       )
 
@@ -104,11 +104,13 @@ object Users {
     user
   }
 
-  def Update(username: String, threads: mutable.Map[ActionThreadsEnum.Value, List[Long]]  ): DeadPoolUsers = {
+  def update(username: String, threads: List[Long], action: ActionThreadsEnum.Value): DeadPoolUsers = {
     val userPreviousSaved = Await.result(getByUsername(username), 10 seconds)
 
     if (userPreviousSaved.nonEmpty)
-      collection.updateOne(com.mongodb.client.model.Filters.eq("username", username), com.mongodb.client.model.Updates.addToSet("myThreads", threads))
+      threads foreach {el =>
+        collection.updateOne(com.mongodb.client.model.Filters.eq("user.username", username), com.mongodb.client.model.Updates.addToSet(s"user.myThreads.${action.toString}", el)).toFuture().isCompleted
+      }
 
     Await.result(getByUsername(username), 10 seconds).head
   }

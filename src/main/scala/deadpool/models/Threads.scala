@@ -78,9 +78,15 @@ object Threads {
           )
       )
     collection.insertOne(doc).toFuture().isCompleted
+
     Future{
       swapParentState(thread.parent_id)
     }
+
+    Future {
+      Users.update(thread.user_name, List(id), ActionThreadsEnum.REPLY)
+    }
+
     DeadPoolThreads(
       Some(doc.get("thread").get.asDocument().get("id", BsonNumber(id)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("parent_id").asNumber().longValue(),
