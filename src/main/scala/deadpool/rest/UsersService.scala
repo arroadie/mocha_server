@@ -1,5 +1,6 @@
 package deadpool.rest
 
+import scala.concurrent.Await
 import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 
@@ -14,7 +15,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.routing.HttpService
 
 import deadpool.rest.formats.RestJsonFormats._
-import deadpool.models.{ActionThreadsEnum, DeadPoolUsers, Users}
+import deadpool.models._
 
 
 /**
@@ -79,7 +80,7 @@ trait UsersService extends HttpService {
       path("users" / Segment / "threads" / LongNumber / "subscribe") { (username, threadId) =>
         put {
           Users.update(username, List(threadId), ActionThreadsEnum.REPLY)
-          complete(Users.update(username, List(threadId), ActionThreadsEnum.REPLY))
+          complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
         }
       }
     }
