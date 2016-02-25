@@ -14,7 +14,7 @@ import spray.httpx.SprayJsonSupport._
 import spray.routing.HttpService
 
 import deadpool.rest.formats.RestJsonFormats._
-import deadpool.models.{DeadPoolUsers, Users}
+import deadpool.models.{ActionThreadsEnum, DeadPoolUsers, Users}
 
 
 /**
@@ -25,6 +25,7 @@ trait UsersService extends HttpService {
   implicit val timeout = Timeout(5 seconds)
   implicit def executionContext = actorRefFactory.dispatcher
   val errorUser = "{\"status\": \"error\"}"
+  val saveUser = (put | post)
   val usersRoutes = {
     respondWithMediaType(`application/json`) {
       path("users") {
@@ -50,15 +51,32 @@ trait UsersService extends HttpService {
           }
 
         } ~
-        put {
+          saveUser {
           entity(as[DeadPoolUsers]) { user =>
-            Users.save(user)
+            Users.findOrCreate(user)
             complete("{\"status\":\"OK\"}")
           }        } ~
         delete {
           complete("USERS DEL")
         }
 
+      }
+
+      path("users" / Segment / "state") { username =>
+        get {
+          val userQuery = Users.getByUsername(username)
+          onComplete(userQuery) {
+            case Success(some: List[DeadPoolUsers]) =>
+              if(!some.isEmpty)
+                complete(some.head.myThreads.get(ActionThreadsEnum.REPLY).get)
+              else
+                complete(errorUser)
+            case Failure(error) =>
+              println(error.getMessage)
+              complete(error)
+          }
+
+        }
       }
     }
   }

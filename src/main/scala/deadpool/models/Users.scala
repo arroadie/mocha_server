@@ -3,8 +3,12 @@ package deadpool.models
 import org.bson.Document
 import org.mongodb.scala.bson.{BsonNumber, BsonArray}
 
-import scala.concurrent.Future
+import _root_.scala.collection.mutable
+import _root_.scala.collection.mutable.ListBuffer
+import _root_.scala.util.{Failure, Success}
+import _root_.scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 import com.mongodb.async.client.{Subscription, Observer}
 import com.typesafe.scalalogging.Logger
@@ -37,31 +41,76 @@ object Users {
   def getById(id: Long): Future[Seq[DeadPoolUsers]] =
     collection.find(and(com.mongodb.client.model.Filters.eq("user.id", id))).first().toFuture.map[Seq[DeadPoolUsers]]{ x => x.map { y =>
       val user = y.get("user").get
+      val tmp_myThreads: mutable.Map[ActionThreadsEnum.Value, List[Long]] = mutable.Map.empty[ActionThreadsEnum.Value, List[Long] ]
+      val keysAction = user.asDocument().get("myThreads").asDocument().keySet().iterator()
+
+      while(keysAction.hasNext()) {
+        val key = keysAction.next()
+        val listValues = user.asDocument().get("myThreads").asDocument().get(key).asArray().getValues.iterator()
+        var elems = ListBuffer.empty[Long]
+        while(listValues.hasNext) {
+          elems += listValues.next().asNumber().longValue()
+        }
+        tmp_myThreads(ActionThreadsEnum.withName(key)) = elems.toList
+      }
+
       DeadPoolUsers(
         user.asDocument().get("id").asNumber().longValue(),
         user.asDocument().get("username").asString().toString,
-        Map.empty[ActionThreadsEnum.Value, List[Long] ]
+        tmp_myThreads.toMap
       )
     }}
 
   def getByUsername(username: String): Future[Seq[DeadPoolUsers]] =
     collection.find(and(com.mongodb.client.model.Filters.eq("user.username", username))).first().toFuture.map[Seq[DeadPoolUsers]]{ x => x.map { y =>
       val user = y.get("user").get
+
+      val myThreads: mutable.Map[ActionThreadsEnum.Value, List[Long]] = mutable.Map.empty[ActionThreadsEnum.Value, List[Long] ]
+      val keysAction = user.asDocument().get("myThreads").asDocument().keySet().iterator()
+
+      while(keysAction.hasNext()) {
+        val key = keysAction.next()
+        val listValues = user.asDocument().get("myThreads").asDocument().get(key).asArray().getValues.iterator()
+        var elems = ListBuffer.empty[Long]
+        elems
+        while(listValues.hasNext) {
+          elems += listValues.next().asNumber().longValue()
+        }
+        myThreads(ActionThreadsEnum.withName(key)) = elems.toList
+      }
+
       DeadPoolUsers(
         user.asDocument().get("id").asNumber().longValue(),
         user.asDocument().get("username").asString().toString,
-        Map.empty[ActionThreadsEnum.Value, List[Long] ]
+        myThreads.toMap
       )
     }}
 
-  def save(user: DeadPoolUsers): Boolean = {
-    val doc = scala.Document(
-      "user" -> scala.Document(
-        "id" ->user.id,
-        "username" -> user.username,
-        "myThreads" -> scala.Document(user.myThreads.map { x => x._1.toString -> BsonArray(x._2.map { y => BsonNumber(y)})  })
+  def findOrCreate(user: DeadPoolUsers): DeadPoolUsers = {
+    val userPreviousSaved = Await.result(getByUsername(user.username), 10 seconds)
+
+    if (userPreviousSaved.isEmpty) {
+      val id = System.nanoTime()
+      val doc = scala.Document(
+        "user" -> scala.Document(
+          "id" -> id,
+          "username" -> user.username,
+          "myThreads" -> scala.Document(user.myThreads.map { x => x._1.toString -> BsonArray(x._2.map { y => BsonNumber(y)})  })
+        )
       )
-    )
-    collection.insertOne(doc).toFuture().isCompleted
+
+      collection.insertOne(doc).toFuture().isCompleted
+    }
+    user
   }
+
+  def Update(username: String, threads: mutable.Map[ActionThreadsEnum.Value, List[Long]]  ): DeadPoolUsers = {
+    val userPreviousSaved = Await.result(getByUsername(username), 10 seconds)
+
+    if (userPreviousSaved.nonEmpty)
+      collection.updateOne(com.mongodb.client.model.Filters.eq("username", username), com.mongodb.client.model.Updates.addToSet("myThreads", threads))
+
+    Await.result(getByUsername(username), 10 seconds).head
+  }
+
 }
