@@ -1,14 +1,15 @@
 package deadpool.models
 
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import com.typesafe.scalalogging.Logger
 
 import com.mongodb.async.client.{Subscription, Observer}
 import org.mongodb.scala
-import org.mongodb.scala.bson.{BsonNumber, BsonBoolean}
+import org.mongodb.scala.bson.{BsonArray, BsonNumber, BsonBoolean}
 import org.mongodb.scala.{Completed, Observable, MongoCollection, ScalaObservable}
 import org.mongodb.scala.bson.conversions.Bson
 import com.mongodb.client.model.Filters._
@@ -48,6 +49,10 @@ object Threads {
         thread.asDocument().get("message").asString().getValue
       )
     }}
+
+  def getById(ids: List[Long]): Future[Seq[DeadPoolThreads]] = {
+    Future(ids.map{i => Await.result(getById(i), 10 seconds).head})
+  }
 
   def getByParentId(id: Long): Future[Seq[DeadPoolThreads]] =
     collection.find(and(com.mongodb.client.model.Filters.eq("thread.parent_id", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>

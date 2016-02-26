@@ -90,6 +90,28 @@ trait UsersService extends HttpService {
             complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
           }
         }
+      } ~
+        path("users" / Segment / "threads" / LongNumber / "favorite") { (username, threadId) =>
+          delete {
+            dynamic {
+              Users.unsubscribe(username, List(threadId), ActionThreadsEnum.FAVORITE)
+              complete("{\"status\":\"deleted\", \"id\":" + threadId + "}")
+            }
+          } ~
+            put {
+              dynamic {
+                Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.FAVORITE)
+                complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
+              }
+            }
+        } ~
+      path("users" / Segment / "favorite"){ username =>
+        get {
+          dynamic {
+            val res = Users.getFavs(username)
+            complete(res)
+          }
+        }
       }
     }
   }

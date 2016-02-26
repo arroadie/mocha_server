@@ -1,6 +1,8 @@
 package deadpool.models
 
-import org.bson.Document
+import scala.collection.JavaConverters._
+
+import org.bson.{BsonValue, Document}
 import org.mongodb.scala.bson.{BsonDocument, BsonNumber, BsonArray}
 
 import _root_.scala.collection.mutable
@@ -17,7 +19,7 @@ import org.mongodb.scala.{Completed, Observable, MongoCollection, ScalaObservabl
 import org.mongodb.scala.bson.conversions.Bson
 import org.slf4j.LoggerFactory
 import deadpool.sources.Mongo
-import com.mongodb.client.model.Filters._
+import org.mongodb.scala.model.Projections._
 import com.mongodb.client.model.Filters.and
 import com.mongodb.client.model.Filters.eq
 
@@ -129,4 +131,10 @@ object Users {
     Await.result(getByUsername(username), 10 seconds).head
   }
 
+  def getFavs(username: String): List[DeadPoolThreads] = {
+    Await.result(Threads.getById(Await.result(collection
+      .find(and(com.mongodb.client.model.Filters.eq("user.username", username)))
+      .first()
+      .toFuture(), 10 seconds).head.get("user").get.asDocument().get("myThreads").asDocument().get("favorite").asArray().getValues.asScala.map{x => x.asNumber().longValue()}.toList), 10 seconds).toList
+  }
 }
