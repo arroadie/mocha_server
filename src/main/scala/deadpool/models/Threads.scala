@@ -24,7 +24,7 @@ import deadpool.sources.Mongo
 /**
   * Chat threads
   */
-case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String, pinned: Option[Boolean])
+case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Option[Long], user_name: String, timestamp: Option[Long], message: String, pinned: Option[Boolean])
 
 case class ThreadsResponse(id: Long, message: String, children: List[DeadPoolThreads])
 
@@ -43,7 +43,7 @@ object Threads {
         Some(thread.asDocument().get("id").asNumber().longValue()),
         thread.asDocument().get("parent_id").asNumber().longValue(),
         Some(thread.asDocument().get("has_children").asBoolean().getValue),
-        thread.asDocument().get("user_id").asNumber().longValue(),
+        Some(thread.asDocument().get("user_id").asNumber().longValue()),
         thread.asDocument().get("user_name").asString().getValue,
         Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue,
@@ -62,7 +62,7 @@ object Threads {
         Some(thread.asDocument().get("id").asNumber().longValue()),
         thread.asDocument().get("parent_id").asNumber().longValue(),
         Some(thread.asDocument().get("has_children").asBoolean().getValue),
-        thread.asDocument().get("user_id").asNumber().longValue(),
+        Some(thread.asDocument().get("user_id").asNumber().longValue()),
         thread.asDocument().get("user_name").asString().getValue,
         Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue,
@@ -78,7 +78,7 @@ object Threads {
         "id"-> id,
         "parent_id"->thread.parent_id,
         "has_children"->thread.has_children.getOrElse(false),
-        "user_id" -> thread.user_id,
+        "user_id" -> thread.user_id.getOrElse(-1.toLong),
         "user_name" -> thread.user_name,
         "timestamp" -> savingTime,
         "message" -> thread.message,
@@ -99,7 +99,7 @@ object Threads {
       Some(doc.get("thread").get.asDocument().get("id", BsonNumber(id)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("parent_id").asNumber().longValue(),
       Some(doc.get("thread").get.asDocument().get("has_children").asBoolean().getValue),
-      doc.get("thread").get.asDocument().get("user_id").asNumber().longValue(),
+      Some(doc.get("thread").get.asDocument().get("user_id").asNumber().longValue()),
       doc.get("thread").get.asDocument().get("user_name").asString().getValue,
       Some(doc.get("thread").get.asDocument().get("timestamp", BsonNumber(savingTime)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("message").asString().getValue,
