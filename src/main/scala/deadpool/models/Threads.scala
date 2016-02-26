@@ -24,7 +24,7 @@ import deadpool.sources.Mongo
 /**
   * Chat threads
   */
-case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String, faved: Option[Boolean])
+case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String, pinned: Option[Boolean])
 
 case class ThreadsResponse(id: Long, children: List[DeadPoolThreads])
 
@@ -47,7 +47,7 @@ object Threads {
         thread.asDocument().get("user_name").asString().getValue,
         Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue,
-        Some(thread.asDocument().getOrDefault("faved", BsonBoolean(false)).asBoolean().getValue)
+        Some(thread.asDocument().getOrDefault("pinned", BsonBoolean(false)).asBoolean().getValue)
       )
     }}
 
@@ -66,7 +66,7 @@ object Threads {
         thread.asDocument().get("user_name").asString().getValue,
         Some(thread.asDocument().get("timestamp").asNumber().longValue()),
         thread.asDocument().get("message").asString().getValue,
-        Some(thread.asDocument().getOrDefault("faved", BsonBoolean(false)).asBoolean().getValue)
+        Some(thread.asDocument().getOrDefault("pinned", BsonBoolean(false)).asBoolean().getValue)
       )
     }}
 
@@ -82,7 +82,7 @@ object Threads {
         "user_name" -> thread.user_name,
         "timestamp" -> savingTime,
         "message" -> thread.message,
-        "faved" -> thread.faved.getOrElse(false)
+        "pinned" -> thread.pinned.getOrElse(false)
           )
       )
     collection.insertOne(doc).toFuture().isCompleted
@@ -103,7 +103,7 @@ object Threads {
       doc.get("thread").get.asDocument().get("user_name").asString().getValue,
       Some(doc.get("thread").get.asDocument().get("timestamp", BsonNumber(savingTime)).asNumber().longValue()),
       doc.get("thread").get.asDocument().get("message").asString().getValue,
-      Some(doc.get("thread").get.asDocument().getOrDefault("faved", BsonBoolean(false)).asBoolean().getValue)
+      Some(doc.get("thread").get.asDocument().getOrDefault("pinned", BsonBoolean(false)).asBoolean().getValue)
     )
   }
 
