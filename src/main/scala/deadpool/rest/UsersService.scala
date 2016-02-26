@@ -68,7 +68,7 @@ trait UsersService extends HttpService {
           onComplete(userQuery) {
             case Success(some: List[DeadPoolUsers]) =>
               if(!some.isEmpty)
-                complete(some.head.myThreads.get.get(ActionThreadsEnum.REPLY).get)
+                complete(Await.result(Threads.getById(some.head.myThreads.get.get(ActionThreadsEnum.REPLY).get), 10 seconds).toLis)
               else
                 complete(errorUser)
             case Failure(error) =>
@@ -87,7 +87,7 @@ trait UsersService extends HttpService {
         put {
           dynamic {
             Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.REPLY)
-            complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
+            complete(ThreadsResponse(threadId, Await.result(Threads.getById(threadId), 1 second).head.message,  Await.result(Threads.getByParentId(threadId), 1 second).toList))
           }
         }
       } ~
@@ -101,7 +101,7 @@ trait UsersService extends HttpService {
             put {
               dynamic {
                 Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.FAVORITE)
-                complete(ThreadsResponse(threadId, Await.result(Threads.getByParentId(threadId), 1 second).toList))
+                complete(ThreadsResponse(threadId, Await.result(Threads.getById(threadId), 1 second).head.message, Await.result(Threads.getByParentId(threadId), 1 second).toList))
               }
             }
         } ~

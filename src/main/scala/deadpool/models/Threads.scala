@@ -26,7 +26,7 @@ import deadpool.sources.Mongo
   */
 case class DeadPoolThreads(id: Option[Long], parent_id: Long, has_children: Option[Boolean], user_id: Long, user_name: String, timestamp: Option[Long], message: String, pinned: Option[Boolean])
 
-case class ThreadsResponse(id: Long, children: List[DeadPoolThreads])
+case class ThreadsResponse(id: Long, message: String, children: List[DeadPoolThreads])
 
 object Threads {
 

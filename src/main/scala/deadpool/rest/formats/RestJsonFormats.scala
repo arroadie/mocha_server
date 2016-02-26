@@ -20,6 +20,6 @@ object RestJsonFormats extends DefaultJsonProtocol {
 
   implicit val threadsJsonFormat = jsonFormat8(DeadPoolThreads.apply)
   implicit val usersJsonFormat   = jsonFormat3(DeadPoolUsers.apply)
-  implicit val threadsResponseFormat = jsonFormat2(ThreadsResponse)
+  implicit val threadsResponseFormat = jsonFormat3(ThreadsResponse)
 
 }

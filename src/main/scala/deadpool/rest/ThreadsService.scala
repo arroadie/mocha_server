@@ -1,5 +1,6 @@
 package deadpool.rest
 
+import scala.concurrent.Await
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.{Failure, Success}
@@ -50,7 +51,7 @@ trait ThreadsService extends HttpService {
             val bla = Threads.getByParentId(id.toLong)
             onComplete(bla) {
               case Success(some: List[DeadPoolThreads]) =>
-                complete(ThreadsResponse(id.toLong, some))
+                complete(ThreadsResponse(id.toLong, Await.result(Threads.getById(id.toLong), 1 second).head.message, some))
               case Failure(error) =>
                 println(error.getMessage)
                 complete(error)
