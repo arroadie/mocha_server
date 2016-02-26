@@ -86,8 +86,14 @@ trait UsersService extends HttpService {
         } ~
         put {
           dynamic {
-            Users.subscribe(username, List(threadId.toLong), ActionThreadsEnum.REPLY)
-            complete(ThreadsResponse(threadId, Await.result(Threads.getById(threadId), 1 second).head.message,  Await.result(Threads.getByParentId(threadId), 1 second).toList))
+            Users.subscribe(username, List(threadId), ActionThreadsEnum.REPLY)
+            complete{
+              try {
+                ThreadsResponse(threadId, Await.result(Threads.getById(threadId), 1 second).head.message,  Await.result(Threads.getByParentId(threadId), 1 second).toList)
+              } catch {
+                case x => errorUser
+              }
+            }
           }
         }
       } ~
