@@ -107,6 +107,22 @@ object Threads {
     )
   }
 
+  def getByName(name: String): Future[Seq[DeadPoolThreads]] = {
+    collection.find(and(com.mongodb.client.model.Filters.eq("thread.message", name), com.mongodb.client.model.Filters.eq("thread.parent_id", -1))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+      val thread = x.get("thread").get
+      DeadPoolThreads(
+        Some(thread.asDocument().get("id").asNumber().longValue()),
+        thread.asDocument().get("parent_id").asNumber().longValue(),
+        Some(thread.asDocument().get("has_children").asBoolean().getValue),
+        Some(thread.asDocument().get("user_id").asNumber().longValue()),
+        thread.asDocument().get("user_name").asString().getValue,
+        Some(thread.asDocument().get("timestamp").asNumber().longValue()),
+        thread.asDocument().get("message").asString().getValue,
+        Some(thread.asDocument().getOrDefault("pinned", BsonBoolean(false)).asBoolean().getValue)
+      )
+    }}
+  }
+
   def swapParentState(id: Long): Unit = {
     collection.updateOne(com.mongodb.client.model.Filters.eq("thread.id", id), set("thread.has_children", true)).toFuture().isCompleted
   }

@@ -65,6 +65,13 @@ trait ThreadsService extends HttpService {
         put {
           complete("{\"repsonse\": \"THREADS PUT\"}")
         }
+      } ~
+      path("threads" / Segment / "join") { name =>
+        dynamic {
+          get {
+            complete(Threads.getByName(name))
+          }
+        }
       }
     }
   }
