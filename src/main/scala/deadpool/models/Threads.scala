@@ -52,7 +52,7 @@ object Threads {
     }}
 
   def getById(ids: List[Long]): Future[Seq[DeadPoolThreads]] = {
-    Future(ids.map{i => Await.result(getById(i), 10 seconds).head})
+    Future(ids.map{i => Await.result(getById(i), 10 seconds)}.flatten)
   }
 
   def getByParentId(id: Long): Future[Seq[DeadPoolThreads]] =
