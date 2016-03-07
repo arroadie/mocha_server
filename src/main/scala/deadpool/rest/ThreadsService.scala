@@ -72,6 +72,30 @@ trait ThreadsService extends HttpService {
             complete(Threads.getByName(name))
           }
         }
+      } ~
+        path("threads" / LongNumber / "join") { id =>
+          dynamic {
+            get {
+              complete(Threads.getById(id))
+            }
+          }
+        } ~
+      path("threads" / LongNumber / "tags" / Segment ){(threadId, tag) =>
+        get{
+          dynamic {
+            complete("OK")
+          }
+        } ~
+        put {
+          dynamic{
+            complete("OK")
+          }
+        } ~
+        delete {
+          dynamic {
+            complete("OK")
+          }
+        }
       }
     }
   }

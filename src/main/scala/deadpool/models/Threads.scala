@@ -9,7 +9,7 @@ import com.typesafe.scalalogging.Logger
 
 import com.mongodb.async.client.{Subscription, Observer}
 import org.mongodb.scala
-import org.mongodb.scala.bson.{BsonArray, BsonNumber, BsonBoolean}
+import org.mongodb.scala.bson.{BsonString, BsonArray, BsonNumber, BsonBoolean}
 import org.mongodb.scala.{Completed, Observable, MongoCollection, ScalaObservable}
 import org.mongodb.scala.bson.conversions.Bson
 import com.mongodb.client.model.Filters._
@@ -32,12 +32,13 @@ object Threads {
 
   //new DeadPoolThreads(1, 1, false, 1, "dude", 1, "hey")
 
+  val filters = com.mongodb.client.model.Filters
   val log = Logger(LoggerFactory.getLogger(this.getClass))
 
   private val collection = Mongo.collection("threads")
 
   def getById(id: Long): Future[Seq[DeadPoolThreads]] =
-    collection.find(and(com.mongodb.client.model.Filters.eq("thread.id", id))).first().toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+    collection.find(and(filters.eq("thread.id", id))).first().toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
         Some(thread.asDocument().get("id").asNumber().longValue()),
@@ -56,7 +57,7 @@ object Threads {
   }
 
   def getByParentId(id: Long): Future[Seq[DeadPoolThreads]] =
-    collection.find(and(com.mongodb.client.model.Filters.eq("thread.parent_id", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+    collection.find(and(filters.eq("thread.parent_id", id))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
         Some(thread.asDocument().get("id").asNumber().longValue()),
@@ -108,7 +109,7 @@ object Threads {
   }
 
   def getByName(name: String): Future[Seq[DeadPoolThreads]] = {
-    collection.find(and(com.mongodb.client.model.Filters.eq("thread.message", name), com.mongodb.client.model.Filters.eq("thread.parent_id", -1))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
+    collection.find(and(filters.eq("thread.message", name), filters.eq("thread.parent_id", -1))).toFuture.map[Seq[DeadPoolThreads]]{x => x.map { x =>
       val thread = x.get("thread").get
       DeadPoolThreads(
         Some(thread.asDocument().get("id").asNumber().longValue()),
@@ -124,7 +125,16 @@ object Threads {
   }
 
   def swapParentState(id: Long): Unit = {
-    collection.updateOne(com.mongodb.client.model.Filters.eq("thread.id", id), set("thread.has_children", true)).toFuture().isCompleted
+    collection.updateOne(filters.eq("thread.id", id), set("thread.has_children", true)).toFuture().isCompleted
+  }
+
+  def addTag(id: Long, tag: String): Thread = {
+    Await.result(
+      collection.updateOne(
+        and(
+          com.mongodb.client.model.Filters.eq("thread.id", id)),
+        com.mongodb.client.model.Updates.addToSet("thread.tags", BsonString(tag)))
+        .toFuture(), 10 seconds).andThen[Thread]{updated => Await.result(collection.find(and(filters.eq("_id", updated.getUpsertedId))).toFuture(), 10 seconds).asInstanceOf[Thread]}.lift
   }
 }
 
